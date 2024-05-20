@@ -3,3 +3,6 @@ result*
 
 # Misc
 .direnv
+
+# Output
+a.out
