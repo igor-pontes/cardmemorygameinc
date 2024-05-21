@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <raylib.h>
 #include <stdint.h>
-#include <signal.h>
 
 #define DARKGRAY2      CLITERAL(Color){ 0, 0, 0, 100 }
 #define DARKYELLOW     CLITERAL(Color) { 253, 249, 0, 230 }
