@@ -109,8 +109,8 @@ void resetPairs(Card **cards, CardPair** pairs) {
 }
 
 Card **createCards(int height, int width, float padding, Vector2 position) {
-  // This way we anly need to allocate once, increasing performance.
-  // To free this block of memory, check lowest point in the cards array.
+  // This way we only need to allocate once, increasing performance.
+  // To free this block of memory, check lowest pointer in cards array.
   Card **cards = (Card **) malloc(ROWS * COLUMNS * sizeof(Card *));
   Card *temp = (Card *) malloc(ROWS * COLUMNS * sizeof(Card));
   for (int i = 0; i < ROWS; i++) {
