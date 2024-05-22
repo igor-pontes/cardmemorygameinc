@@ -1,7 +1,7 @@
 # cardmemorygameinc
 A Card Memory Game I made originally written in React and now in C.
 # Running
-To run simply run these simple commands into your terminal.
+To run simply type these simple commands into your terminal.
 ```
 gcc -lraylib main.c -o card
 ./card
