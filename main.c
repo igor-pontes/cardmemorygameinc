@@ -5,8 +5,11 @@
 #include <raylib.h>
 #include <stdint.h>
 
-#define DARKGRAY2      CLITERAL(Color){ 0, 0, 0, 100 }
-#define DARKYELLOW     CLITERAL(Color) { 253, 249, 0, 230 }
+#define WIDTH  1000;
+#define HEIGHT 1000;
+#define DARKGRAY2  CLITERAL(Color){ 0, 0, 0, 100 }
+#define DARKDARK   CLITERAL(Color){ 0, 0, 0, 150 }
+#define DARKYELLOW CLITERAL(Color) { 253, 249, 0, 230 }
 #define TEXTCOLOR WHITE
 #define ROWS 4
 #define COLUMNS 4
@@ -93,11 +96,13 @@ void resetPairs(Card **cards, CardPair** pairs) {
     int current = rand() % (last+1);
     if (last != current) swapCards(cards, current, last);
     cards[last]->pair_index = i;
+    cards[last]->opened = false;
     pairs[i]->card1 = &*cards[last];
     last -= 1;
     current = rand() % (last+1);
     if (last != current) swapCards(cards, current, last);
     cards[last]->pair_index = i;
+    cards[last]->opened = false;
     pairs[i]->card2 = &*cards[last];
     last -= 1;
   }
@@ -195,23 +200,29 @@ void cardOnRelease(Card *card, CardPair **pairs, GameManager *gm) {
   }
 }
 
-void updateHeader(GameManager *gm) {
+void updateHeader(Card **cards, CardPair **pairs, GameManager *gm) {
   if (gm->status == GAMEOVER ) {
     DrawText("PLAY", 430, 50, 50, TEXTCOLOR);
     if (checkHit(GetMousePosition(), (Rectangle) { .x = 430, .y = 50, .width = 100, .height = 50 })) {
-      if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-        gm->status = RUNNING;
-      } 
       DrawText("PLAY", 430, 50, 50, GRAY);
+      if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+        gm->start = time(NULL);
+        gm->hits = 0;
+        gm->misses = 0;
+        gm->status = RUNNING;
+        resetPairs(cards, pairs);
+        return;
+      } 
     }
   }
   DrawText(TextFormat("%d H", gm->hits), 700, 50, 50, TEXTCOLOR);
   DrawText(TextFormat("%d M", gm->misses), 800, 50, 50, TEXTCOLOR);
 }
 
-void updateTimer(GameManager gm) {
-  if (gm.status != GAMEOVER) {
-    int elapsed = (int) difftime(time(NULL), gm.start);
+void updateTimer(GameManager *gm) {
+  if (gm->status != GAMEOVER) {
+    int elapsed = (int) difftime(time(NULL), gm->start);
+    if (elapsed == 80) gm->status = GAMEOVER;
     DrawText(TextFormat("%ds", elapsed), 170, 50, 50, TEXTCOLOR);
     return;
   } 
@@ -236,28 +247,39 @@ void resetActivePairs(GameManager *gm) {
   }
 }
 
+void drawBoard(Card **cards, CardPair **pairs, GameManager *gm, Rectangle board) {
+  DrawRectangleRounded(board, .03, 1, DARKGRAY);
+  updateCards(cards, pairs, gm);
+  if (gm->status == GAMEOVER) {
+    DrawRectangleRounded(board, .03, 1, DARKDARK);
+    if (gm->hits == 8) {
+      DrawText("CONGRATULATIONS", 250, 480, 50, TEXTCOLOR);
+    } else {
+      DrawText("GAME OVER", 320, 480, 50, TEXTCOLOR);
+    }
+  }
+}
+
 int main() {
-  int w_width = 1000;
-  int w_height = 1000;
-  InitWindow(w_width, w_height, "Card Memory Game");
-  GameManager gm = (GameManager) { .status = GAMEOVER, .misses = 0, .hits = 0, .sig_int = (struct timespec) { .tv_sec = 0, .tv_nsec = 0} };
+  int width = WIDTH;
+  int height = HEIGHT;
+  InitWindow(width, height, "Card Memory Game");
+  GameManager gm = (GameManager) { .status = GAMEOVER, .misses = 0, .hits = 7, .sig_int = (struct timespec) { .tv_sec = 0, .tv_nsec = 0} };
   for (int i = 0; i < PAIR_SIZE; i++) 
     gm.active_pairs[i] = (ActivePair) { .card1 = NULL, .card2 = NULL, .delay = (struct timespec) { .tv_sec = 0, .tv_nsec = 0 } };
-  Rectangle content = { .x =  w_width/2. - 800./2., .y = w_height/2. - 350., .width = 800, .height = 800 };
-  Card **cards = createCards(187, 187, 10., (Vector2) { .x = 10. + content.x, .y = 10. + content.y });
+  Rectangle board = { .x =  width/2. - 800./2., .y = height/2. - 350., .width = 800, .height = 800 };
+  Card **cards = createCards(187, 187, 10., (Vector2) { .x = 10. + board.x, .y = 10. + board.y });
   CardPair **pairs = createPairs();
   resetPairs(cards, pairs);
-  gm.start = time(NULL);
   while (true) {
     if (gm.hits == PAIR_SIZE) gm.status = GAMEOVER;
     clock_gettime(CLOCK_MONOTONIC, &gm.sig_int);
     BeginDrawing();
     resetActivePairs(&gm); 
     ClearBackground(BLACK);
-    DrawRectangleRounded(content, .03, 1, DARKGRAY);
-    updateCards(cards, pairs, &gm);
-    updateHeader(&gm);
-    updateTimer(gm);
+    drawBoard(cards, pairs, &gm, board);
+    updateHeader(cards, pairs, &gm);
+    updateTimer(&gm);
     EndDrawing();
   };
   // TODO: free array?
