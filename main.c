@@ -252,9 +252,10 @@ void drawBoard(Card **cards, CardPair **pairs, GameManager *gm, Rectangle board)
   updateCards(cards, pairs, gm);
   if (gm->status == GAMEOVER) {
     DrawRectangleRounded(board, .03, 1, DARKDARK);
-    if (gm->hits == 8) {
+    if (gm->hits == PAIR_SIZE) {
       DrawText("CONGRATULATIONS", 250, 480, 50, TEXTCOLOR);
-    } else {
+    }
+    if (gm->misses != 0 && gm->hits < PAIR_SIZE) {
       DrawText("GAME OVER", 320, 480, 50, TEXTCOLOR);
     }
   }
@@ -264,9 +265,9 @@ int main() {
   int width = WIDTH;
   int height = HEIGHT;
   InitWindow(width, height, "Card Memory Game");
-  GameManager gm = (GameManager) { .status = GAMEOVER, .misses = 0, .hits = 7, .sig_int = (struct timespec) { .tv_sec = 0, .tv_nsec = 0} };
+  GameManager gm = (GameManager) { .status = GAMEOVER, .misses = 0, .hits = 0, .sig_int = (struct timespec) { .tv_sec = 0, .tv_nsec = 0} };
   for (int i = 0; i < PAIR_SIZE; i++) 
-    gm.active_pairs[i] = (ActivePair) { .card1 = NULL, .card2 = NULL, .delay = (struct timespec) { .tv_sec = 0, .tv_nsec = 0 } };
+    gm.active_pairs[i] = (ActivePair) { .active = false, .card1 = NULL, .card2 = NULL, .delay = (struct timespec) { .tv_sec = 0, .tv_nsec = 0 } };
   Rectangle board = { .x =  width/2. - 800./2., .y = height/2. - 350., .width = 800, .height = 800 };
   Card **cards = createCards(187, 187, 10., (Vector2) { .x = 10. + board.x, .y = 10. + board.y });
   CardPair **pairs = createPairs();
