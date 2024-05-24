@@ -1,5 +1,5 @@
 # cardmemorygameinc
-A Card Memory Game I made originally written in React and now in C.
+A Card Memory Game originally written in React and now rewritten in C.
 # Running
 To run simply type these simple commands into your terminal.
 ```
